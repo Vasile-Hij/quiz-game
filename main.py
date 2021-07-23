@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 import requests
 
 
 class Question:
-    def __init__(self, q_test, q_answer):
-        self._text = q_test
+    def __init__(self, q_body, q_answer):
+        self._body = q_body
         self._answer = q_answer
 
     @property
@@ -13,11 +12,11 @@ class Question:
 
     @property
     def q_text(self):
-        return self._text
+        return self._body
 
     def __repr__(self):
-        return "<Node(_text= %s, _answer= %s)>" \
-               % (self._text, self._answer)
+        return "<Node(body='%s', answer='%s')>" \
+               % (self.body, self.answer)
 
 
 class QuizBrain:
@@ -27,7 +26,7 @@ class QuizBrain:
         self.question_list = q_list
 
     def still_has_questions(self):
-        return self.question_number - 1 < len(self.question_list)
+        return self.question_number < len(self.question_list) 
 
     def get_question(self):
         current_question = self.question_list[self.question_number]
@@ -47,17 +46,30 @@ class QuizBrain:
         print("\n")
 
     def play(self):
-        while self.still_has_questions:
+        while self.still_has_questions():
             self.get_question()
 
 
 class Player:
     def __init__(self, name):
         self._name = name
+        self._score = 0
 
-    def get_player_name(self):
-        player_name = input('Please enter your name: ')
-        return player_name
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def score(self):
+        return self._score
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @score.setter
+    def score(self, score):
+        self._score = score
 
 
 def get_json(x):
@@ -68,18 +80,18 @@ answers = get_json(url)
 
 
 def main():
-    name = []
-    player_name = Player(name)
-    player_name.get_player_name()
+    name = input('Enter player name: ')
+    player = Player(name)
 
     questions = []
     for elem in answers['results']:
         questions.append(Question(elem['question'], elem['correct_answer']))
+    
     quiz = QuizBrain(questions)
     quiz.play()
 
     print("You've completed the quiz")
-    print("Your final score %s: %s/%s" % (player_name, quiz.score, quiz.question_number))
+    print("Your final score %s: %s/%s" % (player.name, quiz.score, quiz.question_number))
 
 
 if __name__ == '__main__':
