@@ -26,7 +26,7 @@ class QuizBrain:
         self.score = 0
         self.question_list = q_list
 
-    def still_has_questions(self):
+    def still_has_questions(self): #TODO
         return self.question_number - 1 < len(self.question_list)
 
     def get_question(self):
