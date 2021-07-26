@@ -1,5 +1,9 @@
 import requests
-
+import csv
+import json
+import sys
+import os
+import pandas as pd
 
 class Question:
     def __init__(self, q_body, q_answer):
@@ -26,7 +30,7 @@ class QuizBrain:
         self.question_list = q_list
 
     def still_has_questions(self):
-        return self.question_number < len(self.question_list) 
+        return self.question_number < len(self.question_list)
 
     def get_question(self):
         current_question = self.question_list[self.question_number]
@@ -41,19 +45,24 @@ class QuizBrain:
             print('You got right!')
         else:
             print("That's wrong!")
+        if user_answer.lower() in {'q', 'quit', 'e', 'exit'}:
+            print('Goodbye!')
+            quit()
         print('The correct answer was: %s' % question.answer)
         print('Your score is %d/%d' % (self.score, self.question_number))
         print("\n")
 
     def play(self):
         while self.still_has_questions():
-            self.get_question()
+           self.get_question()
+
 
 
 class Player:
     def __init__(self, name):
         self._name = name
         self._score = 0
+
 
     @property
     def name(self):
@@ -75,23 +84,43 @@ class Player:
 def get_json(x):
     return requests.get(x).json()
 
+
 url = 'https://opentdb.com/api.php?amount=10&category=18&difficulty=easy&type=boolean'
 answers = get_json(url)
 
 
 def main():
+    print('Welcome to Quiz game')
+    print("Type 'exit' to quit game! Your progress will not be saved!")
+
+
     name = input('Enter player name: ')
     player = Player(name)
 
     questions = []
     for elem in answers['results']:
         questions.append(Question(elem['question'], elem['correct_answer']))
-    
-    quiz = QuizBrain(questions)
-    quiz.play()
+    while True:
+        quiz = QuizBrain(questions)
+        quiz.play()
+        user_replay = str(input('Do you want to play again, (y/n)?'))
+        if user_replay.lower() in {'yes', 'y'}:
+            continue
+        if user_replay.lower() in {'no', 'n'}:
+            break
+    print("You've completed the quiz!")
+    print("Final score %s: %s/%s" % (player.name, quiz.score, quiz.question_number))
 
-    print("You've completed the quiz")
-    print("Your final score %s: %s/%s" % (player.name, quiz.score, quiz.question_number))
+    save = player.name, quiz.score
+    score = 'score.csv'
+    with open(score, 'a', newline='') as saving:
+        writer = csv.writer(saving)
+        writer.writerow(save)
+
+    df = pd.read_csv(score)
+    p = df[df['score'] == df['score'].max()]
+
+    print(p)
 
 
 if __name__ == '__main__':
